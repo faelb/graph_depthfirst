@@ -29,7 +29,9 @@ typedef struct _graph {
 // function prototypes
 void initGraph(graph *g);
 int addNode(graph *g, char *name);
-void topologySearch(graph *g);
+//void topologySearch(graph *g);
+void depthfirstVisit(graph *g, int i);
+void depthfirst(graph *g);
 
 
 // initialize graph
@@ -80,10 +82,39 @@ int addNode(graph *g, char *name) {
     return g->numNodes - 1;
 }
 
+void depthfirst(graph *g){
+    for (int i = 0; i < g->numNodes; ++i) {
+        if(g->nodes[i].color==WHITE){
+          //  printf("white node gefunden: %s\n",g->nodes[i].name);
+        depthfirstVisit(g,i);
 
-void topologySearch(graph *g) {
-    // TODO: implement
+    }
+
+}}
+
+int time = 0;//globaler timer
+
+void depthfirstVisit(graph *g, int i){
+g->nodes[i].color=GRAY;
+time++;
+g->nodes[i].startTime=time;
+//printf("Node %s = Grau & Startzeit %d/\n",g->nodes[i].name,g->nodes[i].startTime);
+
+    for (int j = 0; j < g->numNodes; ++j) {
+        if(g->adjMatrix[i][j]==1 && g->nodes[j].color==WHITE){
+        depthfirstVisit(g,j);}
+
+
+    }
+    g->nodes[i].color=BLACK;
+    time++;
+    g->nodes[i].endTime=time;
+    printf("\nNode %s  %d/%d\n",g->nodes[i].name,g->nodes[i].startTime,g->nodes[i].endTime);
 }
+
+//void topologySearch(graph *g) {
+//    // TODO: implement
+//}
 
 
 int main() {
@@ -98,19 +129,21 @@ int main() {
     
     // initialize the new graph
     initGraph(&g);
-    
+    printf("Graph initialized! \n");
     // open the file
-    fp = fopen("Makefile", "r");
+    fp = fopen("dependencies", "r");
     if (fp == NULL) {
         printf("Cannot open Makefile!!!\n");
         return -1;
     }
+    printf("File opened!\n");
     
     // loop through all lines of the file
     while (!feof(fp)) {
         fgets(line, 1000, fp);
         printf("%s", line);
-        
+
+
         // extract the first node name
         pos = strtok(line, " \n\r");
         // ignore any empty line
@@ -127,15 +160,27 @@ int main() {
             source = addNode(&g, pos);
 
             // add an edge to the adjacency matrix
-            g.adjMatrix[target][source] = 1;
+            g.adjMatrix[source][target] = 1;
             printf("[%d, %s] <- [%d, %s]\n", target, g.nodes[target].name, source, g.nodes[source].name);
+        }
+    }
+    printf("\n now you shall see your adjacency Matrix \n");
+    int i = 0;
+    for (i = 0; i < g.numNodes; i++) { // g.numNodes wird ja geplussed mit jedem mal das ein Objekt geaddet wird
+        printf("\n");
+
+        for (int j = 0; j < g.numNodes; ++j) {
+            printf("[%d]",g.adjMatrix[i][j]);
         }
     }
     
     fclose(fp);
-    
-    // DFS search
-    topologySearch(&g);
+
+    printf("\n\nnow DepthFirstSearch\n\n");
+
+    depthfirst(&g);
+
+
     
     return 0;
 }
